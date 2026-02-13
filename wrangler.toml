@@ -1,5 +1,7 @@
 name = "bank-2026"
-compatibility_date = "2024-05-01"
+compatibility_date = "2024-05-21"
+
+main = "worker/script.js"
 
 [site]
-bucket = "dist"
+bucket = "./dist"
