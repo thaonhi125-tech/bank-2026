@@ -1,13 +1,873 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>myapp</title>
-  </head>
-  <body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prof Roh Bank AI - Intelligent Dashboard</title>
+    
+    <!-- TAILWIND CSS (The Styling Engine) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- GOOGLE FONTS (Inter - Apple Style) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- REACT & BABEL (The Logic Engine) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        apple: {
+                            gray: '#F5F5F7',
+                            blue: '#0071e3',
+                            text: '#1d1d1f',
+                            subtext: '#86868b'
+                        }
+                    },
+                    boxShadow: {
+                        'apple-card': '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02)',
+                        'apple-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #F5F5F7;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+        @keyframes fade-in-up {
+            0% {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .animate-fade-in-up {
+            animation: fade-in-up 0.3s ease-out forwards;
+        }
+    </style>
+</head>
+<body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- ICONS (SVG Components) ---
+        const Icons = {
+            Lock: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>,
+            User: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
+            ChevronRight: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>,
+            CheckCircle: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>,
+            AlertTriangle: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-rose-600"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>,
+            TrendingUp: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>,
+            Activity: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>,
+            LogOut: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>,
+            ArrowLeft: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>,
+            Phone: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+        };
+
+        // --- MOCK DATA (The Intelligence) ---
+        const CLIENTS = [
+            {
+                id: 1,
+                name: "Alex Tan",
+                initials: "AT",
+                segment: "Young Professional",
+                netValue: 45,
+                riskScore: 78,
+                riskLabel: "High",
+                churnRisk: 60,
+                color: "rose",
+                insight: "The Cash-Flow Juggler",
+                desc: "Earns well but high discretionary spend. Liquidity crunch imminent.",
+                greenLight: {
+                    product: "Debt Consolidation Plan",
+                    reason: "Lower his interest burden immediately. Solves his cash flow stress and locks him in.",
+                    tags: ["Retention", "Liquidity"]
+                },
+                redLight: {
+                    product: "Premium Travel Card",
+                    reason: "Do not offer unsecured credit. Utilization is critical. High default probability."
+                },
+                script: "Hi Alex, noticed you've been active with investments. To help manage monthly flow, I can structure your balances into a single plan with a much lower rate.",
+                availableBalance: 12000,
+                potentialInvestments: 5000,
+                assets: 150000,
+                liabilities: 35000,
+                netAssets: 115000
+            },
+            {
+                id: 2,
+                name: "Sarah Lee",
+                initials: "SL",
+                segment: "Affluent Saver",
+                netValue: 88,
+                riskScore: 12,
+                riskLabel: "Low",
+                churnRisk: 15,
+                color: "emerald",
+                insight: "The Optimizer",
+                desc: "High savings ratio, risk-averse, looking for yield.",
+                greenLight: {
+                    product: "Structured Deposit (Principal Protected)",
+                    reason: "Matches her risk-averse profile while offering better yield than her current savings.",
+                    tags: ["Wealth", "Low Risk"]
+                },
+                redLight: {
+                    product: "High-Yield Junk Bonds",
+                    reason: "Client has zero tolerance for capital loss. Offering this will damage trust."
+                },
+                script: "Hi Sarah, I see your savings are growing steadily. We have a principal-protected option that beats the current inflation rate without risking your capital.",
+                availableBalance: 120000,
+                potentialInvestments: 75000,
+                assets: 850000,
+                liabilities: 50000,
+                netAssets: 800000
+            },
+            {
+                id: 3,
+                name: "Mike Chen",
+                initials: "MC",
+                segment: "SME Owner",
+                netValue: 62,
+                riskScore: 45,
+                riskLabel: "Medium",
+                churnRisk: 85,
+                color: "amber",
+                insight: "The Rate Shopper",
+                desc: "Business needs capital. Heavily comparing rates with competitors.",
+                greenLight: {
+                    product: "Business Term Loan (Promo Rate)",
+                    reason: "He is about to churn to Competitor X. A preemptive rate offer will retain him.",
+                    tags: ["SME", "Retention"]
+                },
+                redLight: {
+                    product: "Fixed Deposit",
+                    reason: "He needs liquidity for business inventory, not locked capital."
+                },
+                script: "Hi Mike, before you renew your facility elsewhere, I've got approval for a special term loan rate specifically for our long-term business partners.",
+                availableBalance: 50000,
+                potentialInvestments: 20000,
+                assets: 350000,
+                liabilities: 120000,
+                netAssets: 230000
+            },
+            {
+                id: 4,
+                name: "Emily White",
+                initials: "EW",
+                segment: "Gig Economy Professional",
+                netValue: 35,
+                riskScore: 65,
+                riskLabel: "Medium",
+                churnRisk: 50,
+                color: "orange",
+                insight: "The Variable Earner",
+                desc: "Income is project-based and fluctuates. Needs flexible credit and savings tools.",
+                greenLight: {
+                    product: "Line of Credit",
+                    reason: "Flexible access to funds for uneven cash flow. Higher engagement.",
+                    tags: ["Flexibility", "Credit"]
+                },
+                redLight: {
+                    product: "Fixed Repayment Loan",
+                    reason: "Mismatch with her irregular income schedule, increasing default risk."
+                },
+                script: "Hi Emily, I see you're managing multiple income streams. We have a flexible credit line that can smooth out your cash flow between projects. Interested?",
+                availableBalance: 8000,
+                potentialInvestments: 2000,
+                assets: 90000,
+                liabilities: 25000,
+                netAssets: 65000
+            },
+            {
+                id: 5,
+                name: "David Green",
+                initials: "DG",
+                segment: "Pre-Retiree",
+                netValue: 95,
+                riskScore: 8,
+                riskLabel: "Low",
+                churnRisk: 10,
+                color: "teal",
+                insight: "The Capital Guardian",
+                desc: "Nearing retirement. Priority is wealth preservation and generating stable income.",
+                greenLight: {
+                    product: "Annuity Plan / Low-risk Bonds",
+                    reason: "Capital preservation and predictable income stream for retirement.",
+                    tags: ["Retirement", "Income"]
+                },
+                redLight: {
+                    product: "Speculative Tech Stocks",
+                    reason: "Too volatile for his risk appetite. Capital preservation is key."
+                },
+                script: "Hi David, as you approach retirement, I've found an annuity plan that offers a guaranteed income stream to ensure your financial security. Shall we review it?",
+                availableBalance: 250000,
+                potentialInvestments: 180000,
+                assets: 1200000,
+                liabilities: 30000,
+                netAssets: 1170000
+            },
+            {
+                id: 6,
+                name: "Olivia Blue",
+                initials: "OB",
+                segment: "Digital Nomad",
+                netValue: 55,
+                riskScore: 55,
+                riskLabel: "Medium",
+                churnRisk: 70,
+                color: "cyan",
+                insight: "The Global Spender",
+                desc: "Earns in USD, spends in multiple currencies. High FX fees and potential for international fraud.",
+                greenLight: {
+                    product: "Multi-Currency Account / Travel Insurance",
+                    reason: "Save on FX fees and provide security. High utility for her lifestyle.",
+                    tags: ["FX", "Travel"]
+                },
+                redLight: {
+                    product: "Local-only reward programs",
+                    reason: "Irrelevant for her spending habits. Poor value proposition."
+                },
+                script: "Hi Olivia, I noticed you have transactions in several countries. Our Global Account lets you hold and spend in different currencies, saving you a lot on conversion fees.",
+                availableBalance: 15000,
+                potentialInvestments: 8000,
+                assets: 120000,
+                liabilities: 40000,
+                netAssets: 80000
+            },
+            {
+                id: 7,
+                name: "James Black",
+                initials: "JB",
+                segment: "University Student",
+                netValue: 15,
+                riskScore: 30,
+                riskLabel: "Low",
+                churnRisk: 25,
+                color: "gray",
+                insight: "The Future High-Earner",
+                desc: "Low current assets but high future income potential. Focus on building loyalty.",
+                greenLight: {
+                    product: "Student Credit Card / Graduate Loan Package",
+                    reason: "Build credit history and capture a future high-value client early.",
+                    tags: ["Acquisition", "Long-term Growth"]
+                },
+                redLight: {
+                    product: "High-limit credit products",
+                    reason: "Risk of indebtedness with no stable income. Focus on financial education."
+                },
+                script: "Hi James, as you focus on your studies, we have a student-friendly account with no fees and a simple credit card to help you build your financial history.",
+                availableBalance: 2000,
+                potentialInvestments: 500,
+                assets: 5000,
+                liabilities: 1000,
+                netAssets: 4000
+            }
+        ];
+        
+        // --- CALL MODAL COMPONENT ---
+        function CallModal({ client, onClose }) {
+            const [copied, setCopied] = useState(false);
+
+            const copyToClipboard = () => {
+                navigator.clipboard.writeText(client.script);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            }
+
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg animate-fade-in-up text-center">
+                        <div className="p-8">
+                            <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                                <Icons.Phone />
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-800">Calling Client...</h2>
+                            <p className="text-4xl font-bold text-blue-600 my-2">{client.name}</p>
+                            <p className="text-gray-500">+1 (555) 123-4567</p>
+                        </div>
+                        
+                        <div className="bg-gray-50 p-6 rounded-b-3xl">
+                            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">AI-Suggested Talking Points</h3>
+                            <p className="text-gray-700 text-base italic mb-4">
+                                "{client.script}"
+                            </p>
+                            <button 
+                                onClick={copyToClipboard}
+                                className="w-full bg-gray-200 text-gray-800 font-semibold py-3 rounded-lg hover:bg-gray-300 transition-all mb-4 text-sm"
+                            >
+                                {copied ? 'Copied!' : 'Copy Script to Clipboard'}
+                            </button>
+                            <button 
+                                onClick={onClose} 
+                                className="w-full bg-red-500 text-white font-bold py-3 rounded-lg hover:bg-red-600 transition-all text-sm"
+                            >
+                                Hang Up
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- SURVEY MODAL COMPONENT ---
+        function SurveyModal({ client, onClose }) {
+            const [answers, setAnswers] = useState({});
+
+            const handleScaleChange = (questionId, value) => {
+                setAnswers(prev => ({ ...prev, [questionId]: value }));
+            };
+
+            const handleCheckboxChange = (questionId, option) => {
+                const currentAnswers = answers[questionId] || [];
+                const newAnswers = currentAnswers.includes(option) 
+                    ? currentAnswers.filter(item => item !== option)
+                    : [...currentAnswers, option];
+                setAnswers(prev => ({ ...prev, [questionId]: newAnswers }));
+            };
+            
+            const handleRadioChange = (questionId, option) => {
+                setAnswers(prev => ({ ...prev, [questionId]: option }));
+            };
+
+            const questions = [
+                {
+                    id: 'q1',
+                    type: 'scale',
+                    title: 'FINANCIAL STRESS TEST',
+                    text: 'On a scale of 1 to 10, how confident do you feel about your ability to handle a sudden $5,000 emergency expense?'
+                },
+                {
+                    id: 'q2',
+                    type: 'checkbox',
+                    title: 'LIFE EVENT HORIZON',
+                    text: 'Are you planning any major lifestyle changes in the next 12 months?',
+                    options: ['Marriage / Child', 'New Home Purchase', 'Career Change / Sabbatical', 'Relocation', 'None']
+                },
+                {
+                    id: 'q3',
+                    type: 'radio',
+                    title: 'RISK SENTIMENT',
+                    text: 'Which statement describes you better?',
+                    options: ['I prefer guaranteed returns, even if they are lower.', 'I am comfortable with market ups and downs for higher growth.']
+                }
+            ];
+
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl animate-fade-in-up">
+                        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                            <div>
+                                <h2 className="text-xl font-bold text-gray-800">Live Data Collection</h2>
+                                <p className="text-sm text-gray-500 mt-1">Ask these discovery questions to refine the AI model.</p>
+                            </div>
+                            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+                        <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto">
+                            {questions.map(q => (
+                                <div key={q.id}>
+                                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{q.title}</h3>
+                                    <p className="font-semibold text-gray-800 mb-4 text-lg">"{q.text}"</p>
+                                    
+                                    {q.type === 'scale' && (
+                                        <div className="flex justify-center space-x-2">
+                                            {[...Array(10)].map((_, i) => (
+                                                <button 
+                                                    key={i + 1}
+                                                    onClick={() => handleScaleChange(q.id, i + 1)}
+                                                    className={`h-10 w-10 rounded-full text-sm font-bold transition-all ${answers[q.id] === i + 1 ? 'bg-blue-600 text-white shadow-lg transform scale-110' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>
+                                                    {i + 1}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {q.type === 'checkbox' && (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            {q.options.map(option => (
+                                                <label key={option} className={`flex items-center p-4 rounded-lg border-2 cursor-pointer transition-all ${answers[q.id]?.includes(option) ? 'bg-blue-50 border-blue-500 shadow-md' : 'bg-white border-gray-200 hover:border-gray-300'}`}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={answers[q.id]?.includes(option) || false}
+                                                        onChange={() => handleCheckboxChange(q.id, option)}
+                                                        className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                    />
+                                                    <span className="ml-3 font-medium text-gray-800">{option}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {q.type === 'radio' && (
+                                        <div className="space-y-3">
+                                            {q.options.map(option => (
+                                                <label key={option} className={`flex items-center p-4 rounded-lg border-2 cursor-pointer transition-all ${answers[q.id] === option ? 'bg-blue-50 border-blue-500 shadow-md' : 'bg-white border-gray-200 hover:border-gray-300'}`}>
+                                                    <input
+                                                        type="radio"
+                                                        name={q.id}
+                                                        value={option}
+                                                        checked={answers[q.id] === option}
+                                                        onChange={() => handleRadioChange(q.id, option)}
+                                                        className="h-5 w-5 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                                    />
+                                                    <span className="ml-3 font-medium text-gray-800">{option}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                        <div className="p-6 bg-gray-50 rounded-b-2xl flex justify-end space-x-4">
+                            <button onClick={onClose} className="px-6 py-2.5 text-sm font-bold text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all">
+                                Cancel
+                            </button>
+                            <button onClick={onClose} className="px-6 py-2.5 text-sm font-bold text-white bg-black rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-all shadow-lg hover:shadow-xl">
+                                Save & Update Model
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- APP COMPONENT ---
+        function App() {
+            const [view, setView] = useState('login'); // login, list, dashboard, profile
+            const [selectedClient, setSelectedClient] = useState(null);
+            const [isLoading, setIsLoading] = useState(false);
+            const [isSurveyModalOpen, setIsSurveyModalOpen] = useState(false);
+             const [isCallModalOpen, setIsCallModalOpen] = useState(false);
+
+            const handleLogin = (e) => {
+                e.preventDefault();
+                setIsLoading(true);
+                setTimeout(() => {
+                    setIsLoading(false);
+                    setView('list');
+                }, 1000);
+            };
+
+            const selectClient = (client) => {
+                setSelectedClient(client);
+                setView('dashboard');
+            };
+
+            const openSurveyModal = () => setIsSurveyModalOpen(true);
+            const closeSurveyModal = () => setIsSurveyModalOpen(false);
+            
+            const openCallModal = () => setIsCallModalOpen(true);
+            const closeCallModal = () => setIsCallModalOpen(false);
+
+
+            // --- VIEW: LOGIN ---
+            if (view === 'login') {
+                return (
+                    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#F5F5F7]">
+                        {/* Mesh Gradients Background */}
+                        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
+                            <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
+                            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
+                        </div>
+
+                        {/* Glass Card */}
+                        <div className="glass-panel p-10 rounded-3xl shadow-2xl w-full max-w-md z-10 relative flex flex-col items-center">
+                            <div className="w-16 h-16 bg-black text-white rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            </div>
+                            <h1 className="text-3xl font-bold text-apple-text tracking-tight mb-2">Prof Roh Bank AI</h1>
+                            <p className="text-apple-subtext mb-8 text-center">Enter your credentials to access the Client Intelligence System.</p>
+
+                            <form onSubmit={handleLogin} className="w-full space-y-4">
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <span className="text-gray-400"><Icons.User /></span>
+                                    </div>
+                                    <input type="text" placeholder="Employee ID" className="w-full pl-11 pr-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
+                                </div>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <span className="text-gray-400"><Icons.Lock /></span>
+                                    </div>
+                                    <input type="password" placeholder="Password" className="w-full pl-11 pr-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
+                                </div>
+                                <button type="submit" className="w-full bg-black hover:bg-gray-800 text-white font-medium py-3.5 rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex justify-center items-center">
+                                    {isLoading ? (
+                                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                    ) : "Sign In"}
+                                </button>
+                            </form>
+                        </div>
+                        <div className="absolute bottom-6 text-xs text-gray-400">Powered by Behavioral Data Science</div>
+                    </div>
+                );
+            }
+
+            // --- VIEW: CLIENT LIST ---
+            if (view === 'list') {
+                return (
+                    <div className="min-h-screen bg-[#F5F5F7] p-4 md:p-8">
+                        <div className="max-w-4xl mx-auto">
+                            <header className="flex justify-between items-center mb-8">
+                                <div>
+                                    <h2 className="text-3xl font-bold text-apple-text tracking-tight">Clients</h2>
+                                    <p className="text-apple-subtext mt-1">Select a client to view AI insights.</p>
+                                </div>
+                                <div className="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 font-bold">RM</div>
+                            </header>
+
+                            <div className="bg-white rounded-3xl shadow-apple-card overflow-hidden">
+                                <div className="divide-y divide-gray-100">
+                                    {CLIENTS.map((client) => (
+                                        <div 
+                                            key={client.id} 
+                                            onClick={() => selectClient(client)}
+                                            className="group flex items-center justify-between p-5 hover:bg-gray-50 transition-colors cursor-pointer"
+                                        >
+                                            <div className="flex items-center space-x-4">
+                                                {/* Avatar */}
+                                                <div className={`h-12 w-12 rounded-full bg-${client.color}-100 flex items-center justify-center text-${client.color}-600 font-bold text-lg group-hover:bg-white group-hover:shadow-md transition-all`}>
+                                                    {client.initials}
+                                                </div>
+                                                <div>
+                                                    <div className="font-semibold text-lg text-apple-text flex items-center gap-2">
+                                                        {client.name}
+                                                        {/* Risk Pulse */}
+                                                        {client.riskLabel === 'High' && (
+                                                            <span className="flex h-2.5 w-2.5 relative">
+                                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                                                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                                                            </span>
+                                                        )}
+                                                         {client.riskLabel === 'Medium' && (
+                                                            <span className="flex h-2.5 w-2.5 relative">
+                                                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-sm text-apple-subtext">{client.segment} • ID: #882{client.id}</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="flex items-center space-x-6">
+                                                <div className="text-right hidden sm:block">
+                                                    <div className="text-xs text-apple-subtext uppercase font-medium tracking-wider">Net Value</div>
+                                                    <div className="font-medium text-apple-text">${client.netValue}k</div>
+                                                </div>
+                                                <div className="text-gray-300 group-hover:text-blue-500 transition-colors">
+                                                    <Icons.ChevronRight />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // --- VIEW: DASHBOARD ---
+            if (view === 'dashboard' && selectedClient) {
+                const c = selectedClient;
+                return (
+                    <div className="min-h-screen bg-[#F5F5F7] p-4 md:p-8">
+                        <div className="max-w-6xl mx-auto">
+                            {/* Nav */}
+                            <button onClick={() => setView('list')} className="flex items-center text-apple-subtext hover:text-apple-text mb-6 transition-colors">
+                                <Icons.ArrowLeft />
+                                <span className="ml-1 font-medium">Back to Clients</span>
+                            </button>
+
+                            {/* Header */}
+                            <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+                                <div>
+                                    <h1 className="text-3xl md:text-4xl font-bold text-apple-text tracking-tight">{c.name}</h1>
+                                    <div className="flex items-center mt-2 space-x-3">
+                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${c.riskLabel === 'High' ? 'bg-rose-100 text-rose-700' : c.riskLabel === 'Low' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                            Risk: {c.riskLabel}
+                                        </span>
+                                        <span className="text-apple-subtext text-sm">{c.segment}</span>
+                                    </div>
+                                </div>
+                                <div className="flex flex-wrap items-center space-x-3">
+                                    <button onClick={() => setView('profile')} className="bg-white border border-gray-200 text-apple-text font-medium px-4 py-2 rounded-full shadow-sm hover:bg-gray-50 transition-all text-sm mt-2 md:mt-0">
+                                        View Profile
+                                    </button>
+                                    <button onClick={openCallModal} className="bg-black text-white font-medium px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all text-sm flex items-center mt-2 md:mt-0">
+                                        Call Client
+                                    </button>
+                                    <button onClick={openSurveyModal} className="bg-blue-600 text-white font-medium px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition-all text-sm flex items-center mt-2 md:mt-0">
+                                        Start Survey
+                                    </button>
+                                </div>
+                            </header>
+
+                            {isSurveyModalOpen && <SurveyModal client={c} onClose={closeSurveyModal} />}
+                            {isCallModalOpen && <CallModal client={c} onClose={closeCallModal} />}
+
+                            {/* Bento Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                
+                                {/* 1. VITAL SIGNS */}
+                                <div className="md:col-span-1 space-y-6">
+                                    <div className="bg-white p-6 rounded-3xl shadow-apple-card">
+                                        <h3 className="text-sm font-semibold text-apple-subtext uppercase tracking-wider mb-4">Vital Signs</h3>
+                                        
+                                        <div className="space-y-6">
+                                            <div>
+                                                <div className="flex justify-between mb-1">
+                                                    <span className="text-sm font-medium text-gray-700">Net Value Score</span>
+                                                    <span className="text-sm font-bold text-gray-900">{c.netValue}/100</span>
+                                                </div>
+                                                <div className="w-full bg-gray-100 rounded-full h-2">
+                                                    <div className="bg-blue-500 h-2 rounded-full" style={{width: `${c.netValue}%`}}></div>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <div className="flex justify-between mb-1">
+                                                    <span className="text-sm font-medium text-gray-700">Risk Probability</span>
+                                                    <span className={`text-sm font-bold ${c.riskLabel === 'High' ? 'text-rose-600' : 'text-gray-900'}`}>{c.riskScore}%</span>
+                                                </div>
+                                                <div className="w-full bg-gray-100 rounded-full h-2">
+                                                    <div className={`h-2 rounded-full ${c.riskLabel === 'High' ? 'bg-rose-500' : c.riskLabel === 'Low' ? 'bg-emerald-500' : 'bg-amber-500'}`} style={{width: `${c.riskScore}%`}}></div>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <div className="flex justify-between mb-1">
+                                                    <span className="text-sm font-medium text-gray-700">Churn Likelihood</span>
+                                                    <span className="text-sm font-bold text-gray-900">{c.churnRisk}%</span>
+                                                </div>
+                                                <div className="w-full bg-gray-100 rounded-full h-2">
+                                                    <div className="bg-gray-400 h-2 rounded-full" style={{width: `${c.churnRisk}%`}}></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Behavioral Archetype */}
+                                    <div className="bg-white p-6 rounded-3xl shadow-apple-card">
+                                        <h3 className="text-sm font-semibold text-apple-subtext uppercase tracking-wider mb-3">Behavioral DNA</h3>
+                                        <div className="text-xl font-bold text-apple-text mb-2">"{c.insight}"</div>
+                                        <p className="text-gray-500 text-sm leading-relaxed">
+                                            {c.desc}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* 2. THE RECOMMENDATION ENGINE (Hero) */}
+                                <div className="md:col-span-2 space-y-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+                                        
+                                        {/* GREEN LIGHT - Opportunity */}
+                                        <div className="bg-emerald-50 p-8 rounded-3xl border border-emerald-100 shadow-sm flex flex-col relative overflow-hidden group hover:shadow-md transition-all">
+                                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                                <svg width="100" height="100" viewBox="0 0 24 24" fill="currentColor" className="text-emerald-900"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                                            </div>
+                                            
+                                            <div className="flex items-center space-x-2 mb-4">
+                                                <div className="bg-emerald-100 p-2 rounded-full">
+                                                    <Icons.CheckCircle />
+                                                </div>
+                                                <span className="text-emerald-800 font-bold tracking-wide text-xs uppercase">Recommendation</span>
+                                            </div>
+                                            
+                                            <h3 className="text-2xl font-bold text-emerald-900 mb-3">{c.greenLight.product}</h3>
+                                            <p className="text-emerald-800/80 text-sm leading-relaxed mb-6 flex-grow">
+                                                {c.greenLight.reason}
+                                            </p>
+                                            
+                                            <div className="flex flex-wrap gap-2">
+                                                {c.greenLight.tags.map(tag => (
+                                                    <span key={tag} className="px-3 py-1 bg-white/60 text-emerald-900 text-xs font-semibold rounded-lg backdrop-blur-sm">
+                                                        {tag}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* RED LIGHT - Warning */}
+                                        <div className="bg-rose-50 p-8 rounded-3xl border border-rose-100 shadow-sm flex flex-col relative overflow-hidden group hover:shadow-md transition-all">
+                                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                                <svg width="100" height="100" viewBox="0 0 24 24" fill="currentColor" className="text-rose-900"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                                            </div>
+
+                                            <div className="flex items-center space-x-2 mb-4">
+                                                <div className="bg-rose-100 p-2 rounded-full">
+                                                    <Icons.AlertTriangle />
+                                                </div>
+                                                <span className="text-rose-800 font-bold tracking-wide text-xs uppercase">Avoid Selling</span>
+                                            </div>
+                                            
+                                            <h3 className="text-2xl font-bold text-rose-900 mb-3">{c.redLight.product}</h3>
+                                            <p className="text-rose-800/80 text-sm leading-relaxed flex-grow">
+                                                {c.redLight.reason}
+                                            </p>
+                                        </div>
+
+                                    </div>
+                                    
+                                    {/* SCRIPT CARD */}
+                                    <div className="bg-white p-6 rounded-3xl shadow-apple-card border-l-4 border-blue-500">
+                                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">AI Suggested Script</h3>
+                                        <p className="text-lg text-gray-800 font-medium italic">
+                                            "{c.script}"
+                                        </p>
+                                        <div className="mt-4 flex gap-3">
+                                            <button className="text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg transition-colors">
+                                                Copy to Clipboard
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // --- VIEW: PROFILE ---
+            if (view === 'profile' && selectedClient) {
+                const c = selectedClient;
+                return (
+                    <div className="min-h-screen bg-gray-100 p-4 md:p-8">
+                        <div className="max-w-5xl mx-auto">
+                            <button onClick={() => setView('dashboard')} className="flex items-center text-gray-500 hover:text-gray-800 mb-6 transition-colors">
+                                <Icons.ArrowLeft />
+                                <span className="ml-2 font-medium">Back to Dashboard</span>
+                            </button>
+
+                            <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
+                                <div className="p-8 bg-gradient-to-r from-blue-50 to-indigo-50">
+                                    <div className="flex items-center space-x-6">
+                                        <div className={`h-24 w-24 rounded-full bg-${c.color}-100 flex items-center justify-center text-${c.color}-600 font-bold text-4xl`}>
+                                            {c.initials}
+                                        </div>
+                                        <div>
+                                            <h1 className="text-4xl font-bold text-gray-800 tracking-tight">{c.name}</h1>
+                                            <p className="text-gray-600 mt-1 text-lg">{c.segment}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-8">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                                        <div className="md:col-span-1">
+                                             <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Contact Information</h3>
+                                             <div className="space-y-3 text-gray-700">
+                                                <p><strong>Email:</strong> {c.name.toLowerCase().replace(' ', '.')}@prohrohbank.com</p>
+                                                <p><strong>Phone:</strong> +1 (555) 123-4567</p>
+                                                <p><strong>Client Since:</strong> 2018</p>
+                                             </div>
+                                        </div>
+                                        <div className="md:col-span-2 grid grid-cols-2 gap-8">
+                                            <div>
+                                                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Financial Snapshot</h3>
+                                                <div className="space-y-3 text-gray-700">
+                                                    <p><strong>Net Value:</strong> ${c.netValue}k</p>
+                                                    <p><strong>Risk Score:</strong> <span className={`font-bold ${c.riskLabel === 'High' ? 'text-rose-600' : c.riskLabel === 'Low' ? 'text-emerald-600' : 'text-amber-600'}`}>{c.riskScore}%</span></p>
+                                                    <p><strong>Churn Risk:</strong> {c.churnRisk}%</p>
+                                                </div>
+                                            </div>
+                                             <div>
+                                                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Available Capital</h3>
+                                                <div className="space-y-3 text-gray-700">
+                                                    <p><strong>Available Balance:</strong> ${c.availableBalance.toLocaleString()}</p>
+                                                    <p><strong>Potential Investments:</strong> ${c.potentialInvestments.toLocaleString()}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center mb-8">
+                                        <div className="bg-green-50 p-6 rounded-2xl">
+                                            <p className="text-sm text-green-600 font-semibold">Assets</p>
+                                            <p className="text-2xl font-bold text-green-800">${c.assets.toLocaleString()}</p>
+                                        </div>
+                                        <div className="bg-red-50 p-6 rounded-2xl">
+                                            <p className="text-sm text-red-600 font-semibold">Liabilities</p>
+                                            <p className="text-2xl font-bold text-red-800">${c.liabilities.toLocaleString()}</p>
+                                        </div>
+                                        <div className="bg-blue-50 p-6 rounded-2xl">
+                                            <p className="text-sm text-blue-600 font-semibold">Net Assets</p>
+                                            <p className="text-2xl font-bold text-blue-800">${c.netAssets.toLocaleString()}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-8 pt-8 border-t border-gray-200">
+                                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Recent Activity</h3>
+                                        <ul>
+                                            <li className="flex items-center justify-between py-3">
+                                                <div className="flex items-center">
+                                                    <div className="p-2 bg-green-100 rounded-full"><Icons.Activity className="text-green-600"/></div>
+                                                    <span className="ml-4 text-gray-700">Successful login from new device.</span>
+                                                </div>
+                                                <span className="text-sm text-gray-500">2 days ago</span>
+                                            </li>
+                                            <li className="flex items-center justify-between py-3">
+                                                <div className="flex items-center">
+                                                    <div className="p-2 bg-blue-100 rounded-full"><Icons.TrendingUp className="text-blue-600"/></div>
+                                                    <span className="ml-4 text-gray-700">Large deposit of $5,000.</span>
+                                                </div>
+                                                <span className="text-sm text-gray-500">5 days ago</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
 </html>
